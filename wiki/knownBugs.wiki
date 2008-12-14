@@ -7,7 +7,7 @@ Add your content here.
 
 = Details =
 
-Add your content here.  Format your content with:  
+
   *  Audio sometimes does not play
   * SQLite exception is thrown because connection is not finalized (behind the scenes)
   * Sometimes host cannot be found in order to download Qur'an text
