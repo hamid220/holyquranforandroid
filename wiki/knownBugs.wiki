@@ -1,6 +1,5 @@
-#summary One-sentence summary of this page.
+#summary Known bugs that need to be resolved
 #labels bugs
-
 = Introduction =
 
 Add your content here.
@@ -8,7 +7,8 @@ Add your content here.
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Add your content here.  Format your content with:  
+  *  Audio sometimes does not play
+  * SQLite exception is thrown because connection is not finalized (behind the scenes)
+  * Sometimes host cannot be found in order to download Qur'an text
+  * MediaPlayer.prepare() fails
