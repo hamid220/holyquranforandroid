@@ -13,11 +13,18 @@ import java.util.Date;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,8 +36,10 @@ import com.android.HQ.R;
 import com.android.HQ.constants.Constants;
 import com.android.HQ.data.HQDataHandler;
 import com.android.HQ.data.QDbAdapter;
+import com.android.HQ.service.AudioPlayerInterface;
+import com.android.HQ.service.AudioPlayerService;
 import com.android.HQ.utils.FileFilter;
-import com.android.HQ.utils.MediaPlayerCompletionListener;
+import com.android.HQ.utils.HQUtils;
 
 public class VerseList extends ListActivity {
 
@@ -42,11 +51,15 @@ public class VerseList extends ListActivity {
     private MediaPlayer mp = new MediaPlayer();
     private Menu menu;
     private String tName;    
-    private String curentFileName;
+    private String curentFileName;   
+    private AudioPlayerInterface apInterface;
+    private SharedPreferences settings;
     
 	public void onCreate(Bundle savedInstanceState) {
 	       super.onCreate(savedInstanceState);	       
-	       setContentView(R.layout.verselist);	  
+	       setContentView(R.layout.verselist);	 
+	       bindService(new Intent(this, AudioPlayerService.class), 
+	    		   mConnection, Context.BIND_AUTO_CREATE);
 	       populateTextViews();
 	       
 	       suraNum = getIntent().getExtras().getInt(Constants.INDEX);
@@ -60,7 +73,21 @@ public class VerseList extends ListActivity {
 		      downloadSuraText();
 	    	}
 	    	qdb.close();
+	    	settings = PreferenceManager.getDefaultSharedPreferences(this);
 	}
+	
+	private ServiceConnection mConnection = new ServiceConnection()
+    {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			apInterface = AudioPlayerInterface.Stub.asInterface((IBinder)service);
+			//updateSongList();
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			apInterface = null;
+		}
+    };
+
 	
 	public void downloadSuraText()
 	{
@@ -114,14 +141,14 @@ public class VerseList extends ListActivity {
 	{
 		super.onPause();
 //		mp.stop();
-		mp.release();
+		//mp.release();
 	}
 	
 	protected void onDestroy()
 	{
 		super.onDestroy();
 	//	mp.stop();
-		mp.release();
+		//mp.release();
 	}
 	
 	protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -138,7 +165,7 @@ public class VerseList extends ListActivity {
         	Thread loadThread = new Thread(){
    	    	 public void run(){	 
    	    		String fileName = getSuraFileName(suraNum)+ getSuraFileName(pos)+".mp3";
-   	    		downloadAudio(Constants.VERSE_URL, fileName);
+   	    		downloadAudio(Constants.VERSE_URL);
    	    		playAudio(fileName, true);
    	    		 mProgress.dismiss();
    	    	   }
@@ -177,7 +204,7 @@ public class VerseList extends ListActivity {
 		return fileName;
 	}
 	
-	private void downloadAudio(String strUrl, String fileName)
+	private void downloadAudio(String strUrl)
 	{
 		URL url;
 		OutputStream out = null;
@@ -185,8 +212,10 @@ public class VerseList extends ListActivity {
 		Date startTime = new Date();
 		try {
 			
-			url = new URL(strUrl+fileName);										
-			out = new BufferedOutputStream(new FileOutputStream(Constants.SD_CARD_DIR+fileName, false));
+			String selectedReciter = settings.getString("selectedReciter", "s_gmd/");			
+			String suraFileName = getSuraFileName(suraNum)+".mp3";
+			url = new URL(strUrl);										
+			out = new BufferedOutputStream(new FileOutputStream(Constants.SD_CARD_DIR+selectedReciter+"_"+suraFileName, false));
 			URLConnection c = url.openConnection();					
 			in = c.getInputStream();				
 			byte[] buffer = new byte[1024];
@@ -220,9 +249,11 @@ public class VerseList extends ListActivity {
 		 mProgress = ProgressDialog.show(this,"Downloading Audio...", "Downloading an audio recitation of Sura "+tName, true, true);
 	     Thread loadThread = new Thread(){
 	    	 public void run(){	 
-	    		 String suraFileName = getSuraFileName(suraNum)+".mp3";
-	    		 downloadAudio(url, suraFileName);
-	    		 playAudio(suraFileName, false);
+	    		 downloadAudio(url);
+	    		 
+	 			String selectedReciter = settings.getString("selectedReciter", "s_gmd/");			
+	 			String suraFileName = getSuraFileName(suraNum)+".mp3";
+	    		 playAudio(selectedReciter+"_"+suraFileName, false);
 	    		 mProgress.dismiss();
 	    	   }
 	       };
@@ -237,11 +268,20 @@ public class VerseList extends ListActivity {
 		}
 		if (title.equals("Play Audio")){
 			String suraFileName = getSuraFileName(suraNum)+".mp3";
-			if (!isAudioDownloaded(suraFileName))
+			
+			
+			String selectedReciter = settings.getString("selectedReciter", "s_gmd/");
+			String reciterUrl = HQUtils.getRecitorPath(selectedReciter);    		 
+			
+			if (!isAudioDownloaded(selectedReciter+"_"+suraFileName))
 			{	new AlertDialog.Builder(this).setTitle("Download Sura").setMessage("Do you want to download Sura " + tName + " to your SD Card?")
 					.setPositiveButton("Yes",new DialogInterface.OnClickListener(){
-						public void onClick(DialogInterface dlg, int v){							
-							initiateDownloadAndPlay(Constants.SURA_URL);
+						public void onClick(DialogInterface dlg, int v){			
+							
+							String selectedReciter = settings.getString("selectedReciter", "s_gmd/");
+							String reciterUrl = HQUtils.getRecitorPath(selectedReciter);    		 
+							
+							initiateDownloadAndPlay(reciterUrl+getSuraFileName(suraNum)+".mp3");
 						}
 					})
 					.setNegativeButton("No", new DialogInterface.OnClickListener(){
@@ -251,15 +291,22 @@ public class VerseList extends ListActivity {
 					.show();									           				
 			}
 			else{
-				playAudio(suraFileName, false);
+				playAudio(reciterUrl+suraFileName, false);
 			}
 			menu.findItem(0).setTitle("Stop Audio");
 			return true;
 		}
 		else if (title.equals("Stop Audio")){
-			mp.stop();
-			release();
-			menu.findItem(0).setTitle("Play Audio");
+			try {
+				apInterface.stop();
+				menu.findItem(0).setTitle("Play Audio");
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//mp.stop();
+			//release();
+			
 			return true;
 		}
         return super.onOptionsItemSelected(item);
@@ -289,18 +336,19 @@ public class VerseList extends ListActivity {
 	}
 	private void playAudio(String suraFileName, boolean isVerse){
 		try {	
-					
-		mp = new MediaPlayer();									
-		mp.setDataSource(Constants.SD_CARD_DIR+suraFileName);
-		mp.prepare();
-		//mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		mp.start();	
-		mp.setOnCompletionListener(new MediaPlayerCompletionListener(Constants.SD_CARD_DIR+suraFileName, isVerse));
-		} catch (Exception e) {
-			mp.release();
-			deleteAudioFile(Constants.SD_CARD_DIR+suraFileName);
-			e.printStackTrace();
-		} 		
+				apInterface.playFile(Constants.SD_CARD_DIR+suraFileName);				
+				/*mp = new MediaPlayer();									
+				mp.setDataSource(Constants.SD_CARD_DIR+suraFileName);
+				mp.prepare();
+				//mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+				mp.start();	
+				mp.setOnCompletionListener(new MediaPlayerCompletionListener(Constants.SD_CARD_DIR+suraFileName, isVerse));*/
+			} catch (Exception e) {
+				//apInterface.stop();
+				//mp.release();
+				deleteAudioFile(Constants.SD_CARD_DIR+suraFileName);
+				e.printStackTrace();
+			} 		
 	}	
 	public void deleteAudioFile(String fileName)
 	{
@@ -316,10 +364,15 @@ public class VerseList extends ListActivity {
 	
 	 public boolean onCreateOptionsMenu(Menu menu) {
 	    	boolean result = super.onCreateOptionsMenu(menu);
-	    	if (!mp.isPlaying())
-	    		menu.add("Play Audio");
-	    	else 
-	    		menu.add("Stop Audio");	    	
+	    	try {
+				if (!apInterface.isPlaying())
+					menu.add("Play Audio");
+				else 
+					menu.add("Stop Audio");
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	    	
 	    	menu.add("Refresh Sura");
 	    	this.menu = menu;
 	        return result;
