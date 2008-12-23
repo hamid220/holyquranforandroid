@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content">
+	<!--  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_gravity="center_horizontal">
+		<TextView android:id="@+id/txt_prefTitle" xmlns:android="http://schemas.android.com/apk/res/android" android:text="Preferences" 
+    		android:layout_width="fill_parent" android:textSize="8pt"  android:layout_height="fill_parent"  android:layout_gravity="center_horizontal" android:paddingLeft="20px"/>    	
+    </LinearLayout> -->   
+    <ListView android:id="@+id/android:list" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:dividerHeight="20px" android:divider="#ff0000"/>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content">
+	<TextView android:id="@+id/txt_prefTitle" xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content" android:textSize="8pt"  android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:text="Reciter"/>
+		
+	<Spinner android:id="@+id/sp_reciter"
+        android:layout_height="wrap_content"
+        android:drawSelectorOnTop="true" android:layout_gravity="fill_horizontal" android:layout_width="fill_parent" android:layout_marginLeft="38px"/>   
+    </LinearLayout>	 
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content">
+	<TextView android:id="@+id/txt_prefTitle" xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content" android:textSize="8pt"  android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:text="Translation"/>
+	
+    <Spinner android:id="@+id/sp_translation"
+        android:layout_height="wrap_content" android:layout_gravity="fill_horizontal"
+        android:drawSelectorOnTop="true"        
+    android:layout_width="fill_parent" android:layout_marginLeft="5px"/>    
+    </LinearLayout>
+    
+    </LinearLayout>
