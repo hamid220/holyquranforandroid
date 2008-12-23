@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -68,9 +69,19 @@ public class SuraList extends ListActivity {
 	   
 	   public boolean onCreateOptionsMenu(Menu menu) {
 	    	boolean result = super.onCreateOptionsMenu(menu);	    		    	
-	    	menu.add("About");	    	
+	    	menu.add("About");	  
+	    	menu.add("Preferences");
 	        return result;
 	    }
+	   public boolean onOptionsItemSelected(MenuItem item) {
+			String title = (String) item.getTitle();
+			if (title.equals("Preferences"))
+			{
+				Intent i = new Intent(this, PreferencesActivity.class);
+				startActivity(i);
+			}
+			return true;
+	   }
 	        
 	    private void fillData() {
 	    	dbAdapter.open();

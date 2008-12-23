@@ -39,11 +39,15 @@ public class QDbAdapter {
                     + "ayas text not null, name text not null, tname text not null, rev_order integer not null);";
     
     private static final String Q_Text_Create =
-        "create table q_text (_id integer primary key autoincrement, sura_num integer not null,"
+        "create table q_text (_id integer primary key autoincrement,  sura_num integer not null,"
                 + "aya_num int not null, verse_txt text not null);";
+    private static final String HQ_Preferences_Create =
+    		"create table hq_pref (_id integer primary key autoincrement, pref_name text not null,"
+    			+ "pref_value text not null";
     //private static final String DATABASE_CREATE = "create table q_metadata(_id integer primary key autoincrement, ind integer not null, tname text not null);";
     private static final String DATABASE_NAME = "hq_db";
     private static final String DATABASE_TABLE = "q_metadata";
+    private static final String PREF_TABLE = "hq_pref";
     private static final String SURA_TBL = "q_text";
     private static final int DATABASE_VERSION = 2;
 
@@ -58,7 +62,8 @@ public class QDbAdapter {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(DATABASE_CREATE);
-            db.execSQL(Q_Text_Create);                                      
+            db.execSQL(Q_Text_Create);        
+           // db.execSQL(HQ_Preferences_Create);
         }
        
         @Override
@@ -118,6 +123,13 @@ public class QDbAdapter {
     	mDb.insert(SURA_TBL, null, initialValues);
     }
     
+    public void insertPreferences(String prefName, String prefValue){
+    	ContentValues initialValues = new ContentValues();
+    	initialValues.put("pref_name", prefName);
+    	initialValues.put("pref_value", prefValue);
+    	mDb.insert(PREF_TABLE, null, initialValues);
+    }
+    
     public boolean deleteAll() {
 		return (mDb.delete(DATABASE_TABLE,null, null) > 0);
 	}
@@ -149,6 +161,15 @@ public class QDbAdapter {
     	return mDb.query(SURA_TBL, null, "sura_num=?", new String[]{suraNum}, null, null, null);    	
     }
     
+    public String fetchPreference(String pref){
+    	Cursor c = mDb.query(PREF_TABLE, null,"pref_name=?" , new String[]{pref}, null, null, null);
+    	c.moveToFirst();
+    	return c.getString(1);    	
+    }
+    public void updatePreference(String prefName, String prefValue)
+    {
+    	//mDb.update(PREF_TABLE, values, whereClause, whereArgs)
+    }
     public int suraCount() {
     	Cursor c = mDb.query(DATABASE_TABLE, null, null, null, null, null, null);
     	int count = c.getCount();
