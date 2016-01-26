@@ -1,0 +1,1 @@
+Bringing the Holy Quran to Android operating system.  The home page for this project can be found at http://guidancesoftware.info.
